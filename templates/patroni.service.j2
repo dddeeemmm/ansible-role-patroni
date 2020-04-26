@@ -4,6 +4,7 @@
 [Unit]
 Description=Runners to orchestrate a high-availability PostgreSQL
 After=syslog.target network.target
+ConditionPathExists=/var/lib/pgsql/.bash_profile
 
 [Service]
 Type=simple
