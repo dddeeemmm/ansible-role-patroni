@@ -1,0 +1,36 @@
+---
+
+- name: waiting stabilization
+  wait_for:
+    timeout: 5
+  delegate_to: localhost
+  when: create_patroni_configuration_file is changed or ensure_patroni_is_running is changed
+
+- name: check master
+  uri:
+    url: http://{{ ansible_default_ipv4.address }}:8008
+    status_code: 200, 503
+  register: check_master
+
+
+- block:
+
+    - name: create db user
+      postgresql_user:
+        name: '{{ item.value.user }}'
+        password: '{{ item.value.password }}'
+        state: "{{ item.value.state | d ('present') }}"
+        login_user: '{{ patroni_superuser_username }}'
+        login_password: '{{ patroni_superuser_password }}'
+      with_dict: '{{ patroni_databases }}'
+
+    - name: create db
+      postgresql_db:
+        name: '{{ item.key }}'
+        owner: '{{ item.value.owner }}'
+        state: "{{ item.value.state | d ('present') }}"
+        login_user: '{{ patroni_superuser_username }}'
+        login_password: '{{ patroni_superuser_password }}'
+      with_dict: '{{ patroni_databases }}'
+
+  when: check_master.status == 200
