@@ -1,5 +1,9 @@
 ---
 
+- include_tasks: encvolume.yml
+  when: patroni_encvolume | bool
+  tags: [patroni, patroni-encvolume]
+
 - name: Include OS-specific variables
   include_vars: "{{ ansible_os_family }}.yml"
   tags: [patroni, patroni-install, patroni-configure]
@@ -10,6 +14,9 @@
 - import_tasks: configure.yml
   tags: [patroni, patroni-configure]
 
+- import_tasks: firewalld.yml
+  tags: [patroni, patroni-firesalld]
+
 - meta: flush_handlers
 
 - name: Ensure patroni is running
@@ -18,4 +25,9 @@
     state: started
     daemon_reload: yes
     enabled: yes
+  register: ensure_patroni_is_running
   tags: [patroni]
+
+- include_tasks: createdb.yml
+  when: patroni_databases is defined
+  tags: [patroni, patroni-createdb]
