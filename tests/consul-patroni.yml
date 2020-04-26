@@ -1,0 +1,34 @@
+---
+
+- hosts: consul
+  roles:
+    - { role: consul,
+        consul_mode: server,
+        consul_localrepo: false,
+        consul_ca_file: 'files/certs/cacert.{{ project_domain }}.pem',
+        consul_cert_file: 'files/certs/wildcard.{{ project_name }}.{{ project_domain }}.crt',
+        consul_key_file: 'files/certs/wildcard.{{ project_name }}.{{ project_domain }}.key',
+        tags: consul-server }
+
+- hosts: patroni
+  vars:
+    patroni_databases:
+      database_name_1:
+        user: user
+        owner: postgres
+        password: password
+        state: present
+  roles:
+    - { role: consul,
+        consul_mode: client,
+        consul_ca_file: 'files/certs/cacert.{{ project_domain }}.pem',
+        consul_cert_file: 'files/certs/wildcard.{{ project_name }}.{{ project_domain }}.crt',
+        consul_key_file: 'files/certs/wildcard.{{ project_name }}.{{ project_domain }}.key',
+        consul_acl_keys_rw: ["{{ patroni_cluster_name }}"],
+        consul_acl_sessions_rw: ["{{ ansible_fqdn }}"],
+        tags: consul-client }
+    - { role: ansible-role-patroni,
+        patroni_cluster_name: service,
+        patroni_dcs: consul,
+        patroni_encrypted_volume: true,
+        tags: patroni }
