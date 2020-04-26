@@ -1,0 +1,130 @@
+---
+
+- name: install lvm and cryptsetup-luks
+  yum:
+    name:
+      - lvm*
+      - cryptsetup-luks
+  when: ansible_os_family == "RedHat"
+
+- name: create volume group 'luks'
+  lvg:
+    vg: luks
+    pvs: /dev/sdb
+  register: create_vg
+
+- name: create lv data on vg_luks
+  lvol:
+    vg: luks
+    lv: crypt
+    size: +100%FREE
+  register: create_lv
+  when: create_vg.changed
+
+
+- block:
+
+    - name: get patroni_encvolume_key
+      slurp:
+        src: '{{ patroni_encvolume_keyfile_path }}'
+      register: get_patroni_encvolume_key
+
+    - name: set patroni_encvolume_key
+      set_fact:
+        patroni_encvolume_key: "{{ get_patroni_encvolume_key ['content'] | b64decode }}"
+
+  rescue:
+
+    - name: create patroni_encvolume_key
+      copy:
+        dest: '{{ patroni_encvolume_keyfile_path }}'
+        content: "{{ lookup ('password', 'length=16') }}"
+        owner: root
+        group: root
+        mode: 400
+
+    - name: get patroni_encvolume_key
+      slurp:
+        src: '{{ patroni_encvolume_keyfile_path }}'
+      register: get_patroni_encvolume_key
+
+    - name: set patroni_encvolume_key
+      set_fact:
+        patroni_encvolume_key: "{{ get_patroni_encvolume_key ['content'] | b64decode }}"
+
+  when: patroni_encvolume_key is none
+
+
+- name: create LUKS container
+  luks_device:
+    device: /dev/mapper/luks-crypt
+    keyfile: '{{ patroni_encvolume_keyfile_path }}'
+    state: present
+  register: create_luks_container
+  when: create_lv.changed
+
+- name: check mount point state /var/lib/pgsql
+  command: mountpoint -q /var/lib/pgsql
+  register: mount_state
+  failed_when: False
+  changed_when: False
+
+- name: set mount_state
+  set_fact:
+    mount_state: '{{ mount_state.rc }}'
+
+
+- block:
+
+    - name: open /dev/mapper/luks-crypt to /dev/mapper/luks-data
+      shell: echo {{ patroni_encvolume_key }} | cryptsetup luksOpen /dev/mapper/luks-crypt luks-data
+
+
+    - block:
+
+        - name: create a ext4 filesystem on /dev/mapper/luks
+          filesystem:
+            dev: /dev/mapper/luks-data
+            fstype: ext4
+            force: yes
+          when: create_luks_container.changed
+
+        - name: mount /dev/mapper/luks-data to /var/lib/postgres
+          mount:
+            src: /dev/mapper/luks-data
+            path: /var/lib/postgres
+            fstype: auto
+            state: mounted
+
+      when: ansible_os_family == 'Debian'
+
+
+    - block:
+
+        - name: create a xfs filesystem on /dev/mapper/luks
+          filesystem:
+            dev: /dev/mapper/luks-data
+            fstype: xfs
+            force: yes
+          when: create_luks_container.changed
+  
+        - name: mount /dev/mapper/luks-data to /var/lib/pgsql
+          mount:
+            src: /dev/mapper/luks-data
+            path: /var/lib/pgsql
+            fstype: auto
+            state: mounted
+
+      when: ansible_os_family == 'RedHat'
+
+
+    - name: remove fstab mount
+      lineinfile:
+        line: /dev/mapper/luks-data /var/lib/{{ item }} auto defaults 0 0
+        path: /etc/fstab
+        state: absent
+      loop:
+        - pgsql
+        - postgres
+
+  when: mount_state == '1'
