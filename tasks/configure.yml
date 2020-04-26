@@ -1,5 +1,21 @@
 ---
 
+- block:
+
+    - name: read consul agent token
+      shell: awk -F '"' '/agent/ { print $2 }' /etc/consul.d/consul.hcl | sed 's/"//g'
+      failed_when: false
+      changed_when: false
+      register: read_consul_agent_token
+
+    - set_fact:
+        patroni_consul_token: '{{ read_consul_agent_token.stdout }}'
+
+  when:
+    - patroni_dcs == 'consul'
+    - patroni_consul_token | trim | length == 0
+
+
 - name: Create patroni config directory
   file:
     path: "{{ patroni_config_dir }}"
@@ -44,5 +60,6 @@
     owner: "{{ patroni_system_user }}"
     group: "{{ patroni_system_group }}"
     mode: 0600
+  register: create_patroni_configuration_file
   notify:
     - restart patroni
