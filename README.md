@@ -1,10 +1,11 @@
 # Patroni
 
-    An Ansible role which installs and configures [Patroni](https://github.com/zalando/patroni/) - HA solution for PostgreSQL.
+    An Ansible role which installs and configures Patroni - HA solution for PostgreSQL
+    https://github.com/zalando/patroni/
 
 ## Requirements
 
-    This role requires root privileges, so tell ansible to use `become: true` in any [convenient way](http://docs.ansible.com/ansible/latest/become.html) for you.
+    This role requires root privileges, so tell ansible to use `become: true` in any convenient way for you
 
 ## Role Variables
 
@@ -32,12 +33,16 @@
 
 ## Dependencies
 
-    There are no dependencies for the role, but Patroni itself needs a DCS (Etcd, Consul, ZooKeeper or Exhibitor) to be installed and configured properly and it's your responsibility to make it up and running before using this role.
-    Currently, it is supposed that a DCS is prepared. Otherwise, you can try one of the following roles (just uncomment respective section [here](https://github.com/kostiantyn-nemchenko/ansible-role-patroni/blob/master/meta/main.yml#L28) and set `patroni_dcs_exists` variable to false):
-    
-    * [**andrewrothstein.etcd-cluster**](https://github.com/andrewrothstein/ansible-etcd-cluster)
-    * [**brianshumate.consul**](https://github.com/brianshumate/ansible-consul)
-    * [**AnsibleShipyard.ansible-zookeeper**](https://github.com/AnsibleShipyard/ansible-zookeeper)
+    There are no dependencies for the role, but Patroni itself needs a DCS (Etcd, Consul, ZooKeeper or Exhibitor) to be 
+    installed and configured properly and it's your responsibility to make it up and running before using this role
+
+    Currently, it is supposed that a DCS is prepared. Otherwise, you can try one of the following roles
+    just uncomment respective section and set `patroni_dcs_exists` variable to false:
+
+    etcd:       https://github.com/andrewrothstein/ansible-etcd-cluster
+    consul:     https://github.com/brianshumate/ansible-consul
+    zookeeper:  https://github.com/AnsibleShipyard/ansible-zookeeper
+
     Currently, it is supposed that a DCS is prepared.
 
 ## Example Playbook
