@@ -77,7 +77,7 @@ patroni_consul_cert: ""
 patroni_consul_key: ""
 patroni_consul_dc: ""
 patroni_consul_checks: ""
-patroni_consul_register_service: false
+patroni_consul_register_service: true
 patroni_consul_service_check_interval: 5s
 patroni_consul_consistency: default
 
@@ -183,19 +183,19 @@ patroni_postgresql_pgbackrest: []
 #  - { option: "command",   value: "/usr/bin/pgbackrest --stanza=main --delta restore" }
 #  - { option: "keep_data", value: "true" }
 #  - { option: "no_params", value: "true" }
-patroni_postgresql_wal_e: []
-#  - { option: "command",   value: "patroni_wale_restore" }
-#  - { option: "no_master", value: "1" }
-#  - { option: "envdir",    value: "/etc/wal_e/envdir" }
-#  - { option: "use_iam",   value: "1" }
-patroni_postgresql_basebackup: []
-#  - { option: "checkpoint", value: "fast" }
-#  - { option: "max-rate",   value: "100M" }
-#  - { option: "verbose",    value: '' }
+patroni_postgresql_wal_e:
+  - { option: "command",   value: "patroni_wale_restore" }
+  - { option: "no_master", value: "1" }
+  - { option: "envdir",    value: "/etc/wal_e/envdir" }
+  - { option: "use_iam",   value: "1" }
+patroni_postgresql_basebackup:
+  - { option: "checkpoint", value: "fast" }
+  - { option: "max-rate",   value: "100M" }
+  - { option: "verbose",    value: '' }
 
 patroni_postgresql_recovery_conf: []
-#  - { option: "standby_mode",    value: "on" }
-#  - { option: "restore_command", value: "cp ../wal_archive/%f %p" }
+  - { option: "standby_mode",    value: "on" }
+  - { option: "restore_command", value: "cp ../wal_archive/%f %p" }
 
 patroni_postgresql_custom_conf: "" #TODO
 
@@ -204,9 +204,9 @@ patroni_postgresql_parameters:
 
 patroni_postgresql_pg_hba: []
 #  - { type: "host", database: "all",          user: "all",                                address: "0.0.0.0/0", method: "ident", options: "map=omicron" }
-#  - { type: "host", database: "replication",  user: "{{ patroni_replication_username }}", address: "0.0.0.0/0", method: "md5" }
-#  - { type: local,  database: all,            user: '{{ patroni_superuser_username }}',                         method: md5 }
-#  - { type: local,  database: all,           user: postgres,                                                   method: trust }
+  - { type: host,   database: replication,  user: '{{ patroni_replication_username }}', address: '0.0.0.0/0', method: md5 }
+  - { type: local,  database: all,          user: '{{ patroni_superuser_username }}',                         method: md5 }
+  - { type: local,  database: all,          user: postgres,                                                   method: trust }
 
 patroni_postgresql_pg_ident: []
 #  - { mapname: "omicron", sysuser: "robert", pguser: "bob" }
@@ -230,6 +230,6 @@ patroni_tags:
   - { name: "replicatefrom", value: "" }
 
 # data encrypt
-patroni_encvolume: false                        # [true|false] encrypt second volume fore data store
-patroni_encvolume_key:                          # [not required] if not set, will be generated and store to patroni_encvolume_keyfile_path
-patroni_encvolume_keyfile_path: /opt/keyfile    # path to store patroni_encvolume_key
+patroni_encvolume: false
+patroni_encvolume_key:
+patroni_encvolume_keyfile_path: /opt/keyfile
