@@ -231,5 +231,5 @@ patroni_tags:
 
 # data encrypt
 patroni_encvolume: false
-patroni_encvolume_key:
+patroni_encvolume_key: ''
 patroni_encvolume_keyfile_path: /opt/keyfile
