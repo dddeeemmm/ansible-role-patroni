@@ -110,16 +110,27 @@ patroni_bootstrap_dcs_standby_cluster:
 patroni_bootstrap_dcs_postgresql_use_pg_rewind: false
 patroni_bootstrap_dcs_postgresql_use_slots: true
 patroni_bootstrap_dcs_postgresql_parameters:
-  - { option: "max_connections",           value: "100" }
-  - { option: "max_locks_per_transaction", value: "64" }
-  - { option: "max_worker_processes",      value: "8" }
-  - { option: "max_prepared_transactions", value: "0" }
-  - { option: "wal_level",                 value: "replica" }
-  - { option: "wal_log_hints",             value: "on" }
-  - { option: "track_commit_timestamp",    value: "off" }
-  - { option: "max_wal_senders",           value: "10" }
-  - { option: "max_replication_slots",     value: "10" }
-  - { option: "wal_keep_segments",         value: "8" }
+  - { option: "max_connections",                      value: "100"                                            }
+  - { option: "max_locks_per_transaction",            value: "64"                                             }
+  - { option: "max_worker_processes",                 value: "8"                                              }
+  - { option: "max_prepared_transactions",            value: "0"                                              }
+  - { option: "wal_level",                            value: "logical"                                        }
+  - { option: "archive_mode",                         value: "on"                                             }
+  - { option: "wal_log_hints",                        value: "on"                                             }
+  - { option: "track_commit_timestamp",               value: "off"                                            }
+  - { option: "max_wal_senders",                      value: "20"                                             }
+  - { option: "max_replication_slots",                value: "20"                                             }
+  - { option: "archive_command",                      value: "'envdir {{virtualenv_path}} wal-e wal-push %p'" }
+  - { option: "archive_timeout",                      value: "60"                                             }
+  - { option: "track_commit_timestamp",               value: "off"                                            }
+  - { option: "wal_keep_segments",                    value: "256"                                            }
+  - { option: "track_functions",                      value: "pl"                                             }
+  - { option: "max_locks_per_transaction",            value: "64"                                             }
+  - { option: "random_page_cost",                     value: "1"                                              }
+  - { option: "log_autovacuum_min_duration",          value: "0"                                              }
+  - { option: "max_locks_per_transaction",            value: "64"                                             }
+  - { option: "unix_socket_directories",              value: "/var/run/postgresql"                            }
+  - { option: "shared_buffers",                       value: "512"                                            }
 
 patroni_bootstrap_dcs_postgresql_recovery_conf: []
 #  - { option: "standby_mode",    value: "on" }
